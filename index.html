@@ -5,39 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>אוסף החלב</title>
     <style>
-        /* Styles remain the same */
+        /* Basic Reset & Body Styling */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif; background-color: #e0f2f7; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+
+        /* Game Container */
         #game-container { position: relative; width: 90vw; max-width: 400px; aspect-ratio: 3 / 4; background-color: #87CEEB; border: 3px solid #5a4d41; border-radius: 10px; overflow: hidden; touch-action: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         #game-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .cow { position: absolute; top: 5%; width: 15%; height: 10%; background-color: #d2b48c; border: 2px solid #8b4513; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #5a4d41; z-index: 1; }
-        #cow-left { left: 10%; } #cow-center { left: 50%; transform: translateX(-50%); } #cow-right { right: 10%; }
+
+        /* Cows - Updated for Images */
+        .cow {
+            position: absolute;
+            top: 5%;
+            width: 15%; /* Adjust if needed based on image aspect ratio */
+            height: 10%;/* Adjust if needed based on image aspect ratio */
+            /* Removed background-color and border */
+            background-size: contain; /* Scale image within the div */
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+            /* Remove text display properties */
+            /* display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #5a4d41; */
+        }
+        /* Assign specific images */
+        #cow-left {
+            left: 10%;
+            background-image: url('images/cow left.png'); /* Relative path */
+        }
+        #cow-center {
+            left: 50%;
+            transform: translateX(-50%);
+            background-image: url('images/cow forward.png'); /* Relative path */
+        }
+        #cow-right {
+            right: 10%;
+            background-image: url('images/right cow.png'); /* Relative path */
+        }
+
+        /* Drops */
         .drop-base { position: absolute; z-index: 2; }
         .milk-drop { width: 16px; height: 24px; background-color: #ffffff; border: 1px solid #b0e0e6; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
         .golden-drop { width: 16px; height: 24px; background-color: #ffd700; border: 1px solid #e6c300; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; box-shadow: 0 0 5px yellow; }
-        .obstacle-drop { width: 18px; height: 18px; background-color: #555; border: 1px solid #000; border-radius: 50%; }
-        .carton-powerup { width: 20px; height: 26px; background-color: #f5f5dc; border: 2px solid #a0522d; font-size: 8px; display:flex; align-items:center; justify-content:center; color: #a0522d; }
+        .obstacle-drop { width: 18px; height: 18px; background-color: #555; border: 1px solid #000; border-radius: 50%; } /* Placeholder */
+        .carton-powerup { width: 20px; height: 26px; background-color: #f5f5dc; border: 2px solid #a0522d; font-size: 8px; display:flex; align-items:center; justify-content:center; color: #a0522d; } /* Placeholder */
+
+        /* Player */
         #player { position: absolute; bottom: 5%; width: 16%; height: 13%; background-color: #silver; border: 2px solid #4682b4; border-radius: 3px 3px 8px 8px; transition: left 0.1s linear, transform 0.1s linear, width 0.3s ease, background-color 0.2s linear; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #2f4f4f; text-align: center; z-index: 3; padding: 2px; overflow: hidden; }
         #player.full { background-color: #add8e6; }
         #player.super-jug { width: 80%; left: 50%; transform: translateX(-50%); background-color: #ffec8b; border: 3px dashed #ffd700; box-shadow: 0 0 10px yellow; }
         #player.left { left: 10%; transform: translateX(0%); } #player.center { left: 50%; transform: translateX(-50%); } #player.right { left: calc(100% - 10% - 16%); transform: translateX(0%); }
+
+        /* Machine */
         #machine { position: absolute; bottom: 2%; left: 91%; width: 5%; height: 18%; background-color: #b0c4de; border: 2px solid #708090; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 8px; font-weight: bold; color: #2f4f4f; z-index: 1; writing-mode: horizontal-tb; direction: rtl; padding: 1px; overflow: hidden; }
+
+        /* Messages */
         #yummy-message { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255, 255, 0, 0.85); color: #a0522d; padding: 15px 25px; border-radius: 20px; border: 3px dashed #a0522d; text-align: center; font-size: 1.8em; font-weight: bold; z-index: 11; display: none; direction: rtl; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         #game-over { direction: rtl; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 25px; border-radius: 15px; text-align: center; z-index: 10; display: none; border: 3px solid #ff8c00; }
         #game-over h2 { margin-bottom: 15px; color: #ff8c00; font-size: 1.8em; } #game-over span { font-weight: bold; font-size: 1.4em; color: #fff; margin-left: 5px; }
+
+        /* UI Below Game */
         #ui-container { direction: rtl; margin-top: 10px; padding: 5px; background-color: rgba(255, 255, 255, 0.7); border-radius: 5px; text-align: center; width: 90%; max-width: 400px; }
         #score-lives-display { margin-bottom: 10px; font-size: 1.1em; color: #333; display: flex; justify-content: space-around; padding: 0 10px; }
         #score-lives-display span { font-weight: bold; margin-left: 3px; }
         #start-button, #restart-button { padding: 12px 22px; font-size: 1.1em; cursor: pointer; background-color: #ff8c00; color: white; border: none; border-radius: 8px; margin-top: 5px; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); font-family: inherit; }
         #start-button:hover, #restart-button:hover { background-color: #ffa500; } #start-button:active, #restart-button:active { transform: translateY(1px); }
+
+        /* Controls */
         #controls { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 5; display: flex; cursor: pointer; }
         #control-left, #control-right { flex-basis: 50%; height: 100%; }
+
+        /* Powerup Timer Bar Styles */
         #powerup-timer { position: absolute; top: 2%; left: 5%; width: 90%; height: 8px; background-color: rgba(100, 100, 100, 0.5); border: 1px solid #333; border-radius: 4px; display: none; z-index: 6; overflow: hidden; }
         #powerup-timer-bar { width: 100%; height: 100%; background-color: #ffd700; border-radius: 3px; }
+
     </style>
 </head>
 <body>
-    <div id="game-container"> <div id="game-screen"> <div id="cow-left" class="cow">ש</div> <div id="cow-center" class="cow">א</div> <div id="cow-right" class="cow">י</div> <div id="machine">מכונה</div> <div id="player">ריק</div> <div id="powerup-timer"><div id="powerup-timer-bar"></div></div> </div> <div id="controls"> <div id="control-left"></div> <div id="control-right"></div> </div> <div id="game-over"> <h2>הפסדת!</h2> ניקוד סופי: <span id="final-score">0</span> <button id="restart-button">שחק שוב</button> </div> <div id="yummy-message">יאמי!</div> </div> <div id="ui-container"> <div id="score-lives-display"> <div>חיים: <span id="lives">3</span></div> <div>ניקוד: <span id="score">0</span></div> </div> <button id="start-button">התחל משחק</button> </div>
+    <div id="game-container">
+         <div id="game-screen">
+             <div id="cow-left" class="cow"></div>
+             <div id="cow-center" class="cow"></div>
+             <div id="cow-right" class="cow"></div>
+             <div id="machine">מכונה</div>
+             <div id="player">ריק</div>
+             <div id="powerup-timer"><div id="powerup-timer-bar"></div></div>
+         </div>
+         <div id="controls"> <div id="control-left"></div> <div id="control-right"></div> </div>
+         <div id="game-over"> <h2>הפסדת!</h2> ניקוד סופי: <span id="final-score">0</span> <button id="restart-button">שחק שוב</button> </div>
+         <div id="yummy-message">יאמי!</div>
+     </div>
+    <div id="ui-container"> <div id="score-lives-display"> <div>חיים: <span id="lives">3</span></div> <div>ניקוד: <span id="score">0</span></div> </div> <button id="start-button">התחל משחק</button> </div>
 
     <script>
         // --- DOM Element References --- (no changes)
@@ -47,7 +104,7 @@
         let score = 0, lives = 3, gameIsRunning = false, playerPosition = 'center', activeDrops = [], jugMilkCount = 0; let isSuperJugActive = false; let superJugTimeoutId = null; let powerupStartTime = null;
 
         // --- Game Settings --- (no changes)
-        const INITIAL_LIVES = 3, MAX_JUG_CAPACITY = 3, POINTS_PER_CATCH = 1, POINTS_PER_EMPTY = 5; /* Removed POINTS_PER_GOLDEN_CATCH */ const BASE_DROP_SPEED = 2.5, BASE_DROP_INTERVAL = 1400, CATCH_ZONE_Y_OFFSET = 5; const GAME_LOOP_INTERVAL = 16, YUMMY_MESSAGE_DURATION = 1500; const MILK_DROP_WIDTH_PX = 16, MILK_DROP_HEIGHT_PX = 24; const GOLDEN_CHANCE = 0.05; const OBSTACLE_CHANCE = 0.07; const CARTON_CHANCE = 0.02; const SUPER_JUG_DURATION = 5000;
+        const INITIAL_LIVES = 3, MAX_JUG_CAPACITY = 3, POINTS_PER_CATCH = 1, POINTS_PER_EMPTY = 5; const BASE_DROP_SPEED = 2.5, BASE_DROP_INTERVAL = 1400, CATCH_ZONE_Y_OFFSET = 5; const GAME_LOOP_INTERVAL = 16, YUMMY_MESSAGE_DURATION = 1500; const MILK_DROP_WIDTH_PX = 16, MILK_DROP_HEIGHT_PX = 24; const GOLDEN_CHANCE = 0.05; const OBSTACLE_CHANCE = 0.07; const CARTON_CHANCE = 0.02; const SUPER_JUG_DURATION = 5000;
 
         // --- Game Loop Variables --- (no changes)
         let gameLoopIntervalId = null, dropGenerationTimeoutId = null, currentDropSpeed = BASE_DROP_SPEED; let currentDropInterval = BASE_DROP_INTERVAL, yummyMessageTimeoutId = null;
@@ -60,28 +117,7 @@
         function generateMilkDrop() { /* ... (no changes) ... */ if (!gameIsRunning) return; const drop = document.createElement('div'); drop.classList.add('drop-base'); let type = 'milk'; const rand = Math.random(); if (isSuperJugActive) { if (rand < GOLDEN_CHANCE) { type = 'golden'; drop.classList.add('golden-drop'); } else { type = 'milk'; drop.classList.add('milk-drop'); } } else { if (rand < GOLDEN_CHANCE) { type = 'golden'; drop.classList.add('golden-drop'); } else if (rand < GOLDEN_CHANCE + OBSTACLE_CHANCE) { type = 'obstacle'; drop.classList.add('obstacle-drop'); } else if (rand < GOLDEN_CHANCE + OBSTACLE_CHANCE + CARTON_CHANCE) { type = 'carton'; drop.classList.add('carton-powerup'); drop.textContent = '?'; } else { type = 'milk'; drop.classList.add('milk-drop'); } } drop.dataset.type = type; const randPos = Math.random(); let side, startX = 0, cowElement; const screenWidth = gameScreen.offsetWidth; const dropWidth = drop.classList.contains('carton-powerup') ? 20 : (drop.classList.contains('obstacle-drop') ? 18 : MILK_DROP_WIDTH_PX); if (randPos < 0.333) { side = 'left'; cowElement = cowLeft; startX = (screenWidth * 0.175) - (dropWidth / 2); } else if (randPos < 0.666) { side = 'center'; cowElement = cowCenter; startX = (screenWidth * 0.5) - (dropWidth / 2); } else { side = 'right'; cowElement = cowRight; startX = (screenWidth * 0.825) - (dropWidth / 2); } const startY = cowElement.offsetTop + cowElement.offsetHeight; drop.style.left = `${startX}px`; drop.style.top = `${startY}px`; drop.dataset.side = side; gameScreen.appendChild(drop); activeDrops.push({ element: drop, side: side, type: type, y: startY }); }
         function moveMilkDrops() { /* ... (no changes) ... */ const screenHeight = gameScreen.offsetHeight; const playerCatchLevel = player.offsetTop - CATCH_ZONE_Y_OFFSET; const playerBottom = player.offsetTop + player.offsetHeight; const defaultDropHeight = MILK_DROP_HEIGHT_PX; const dropsToRemoveIndexes = []; for (let i = activeDrops.length - 1; i >= 0; i--) { const dropData = activeDrops[i]; if (!dropData || !dropData.element || !dropData.element.parentNode) { if(activeDrops[i]) dropsToRemoveIndexes.push(i); continue; } let dropProcessed = false; if (isSuperJugActive) { const dropHeight = dropData.element.offsetHeight || defaultDropHeight; const dropBottom = dropData.y + dropHeight; if (dropBottom >= playerCatchLevel && dropData.y < playerBottom) { if (dropData.type === 'obstacle') { console.log("Super Jug destroyed obstacle!"); dropData.element.remove(); dropsToRemoveIndexes.push(i); dropProcessed = true; } else if (dropData.type === 'carton') { console.log("Super Jug ignored carton!"); } else { console.log(`Super Jug auto-caught ${dropData.type} drop!`); handleCatch(dropData); dropData.element.remove(); dropsToRemoveIndexes.push(i); dropProcessed = true; } } } if (!dropProcessed) { dropData.y += currentDropSpeed; dropData.element.style.top = `${dropData.y}px`; if (dropData.y > screenHeight) { if (dropData.type !== 'obstacle') { handleMiss(dropData); } dropData.element.remove(); dropsToRemoveIndexes.push(i); dropProcessed = true; } else if (!isSuperJugActive) { const dropHeight = dropData.element.offsetHeight || defaultDropHeight; const dropBottom = dropData.y + dropHeight; if (dropBottom >= playerCatchLevel && dropData.y < playerBottom) { if (checkCatch(dropData)) { handleCatch(dropData); dropData.element.remove(); dropsToRemoveIndexes.push(i); dropProcessed = true; } } } } } if (dropsToRemoveIndexes.length > 0) { dropsToRemoveIndexes.sort((a, b) => b - a); dropsToRemoveIndexes.forEach(index => { if (activeDrops[index]) { activeDrops.splice(index, 1); } else { console.warn(`Attempted to splice invalid index ${index}`); } }); } }
         function checkCatch(dropData) { /* ... (no changes) ... */ return playerPosition === dropData.side; }
-
-        // *** UPDATED: handleCatch gives life for Golden Drop ***
-        function handleCatch(dropData) {
-            if (dropData.type === 'obstacle') {
-                console.log("Caught obstacle!"); lives--; updateUI(); if (lives <= 0 && gameIsRunning) { endGame(); }
-            } else if (dropData.type === 'carton') {
-                 console.log("Caught carton powerup!"); activateSuperJug();
-            } else if (dropData.type === 'golden') {
-                 console.log("Caught golden drop!");
-                 lives++; // *** ADDED: Increment lives ***
-                 jugMilkCount = MAX_JUG_CAPACITY; // Instantly fill the jug
-                 updateUI(); // Update visuals immediately (lives and jug)
-                 if (jugMilkCount === MAX_JUG_CAPACITY && (playerPosition === 'right' || isSuperJugActive)) { emptyJug(); }
-            } else { // Regular milk drop
-                 score += POINTS_PER_CATCH;
-                 if (jugMilkCount < MAX_JUG_CAPACITY) { jugMilkCount++; }
-                 updateUI();
-                 if (jugMilkCount === MAX_JUG_CAPACITY && (playerPosition === 'right' || isSuperJugActive)) { emptyJug(); }
-            }
-            // Removal handled in moveMilkDrops
-         }
-
+        function handleCatch(dropData) { /* ... (no changes) ... */ if (dropData.type === 'obstacle') { console.log("Caught obstacle!"); lives--; updateUI(); if (lives <= 0 && gameIsRunning) { endGame(); } } else if (dropData.type === 'carton') { console.log("Caught carton powerup!"); activateSuperJug(); } else if (dropData.type === 'golden') { console.log("Caught golden drop!"); lives++; jugMilkCount = MAX_JUG_CAPACITY; updateUI(); if (jugMilkCount === MAX_JUG_CAPACITY && (playerPosition === 'right' || isSuperJugActive)) { emptyJug(); } } else { score += POINTS_PER_CATCH; if (jugMilkCount < MAX_JUG_CAPACITY) { jugMilkCount++; } updateUI(); if (jugMilkCount === MAX_JUG_CAPACITY && (playerPosition === 'right' || isSuperJugActive)) { emptyJug(); } } }
         function handleMiss(dropData) { /* ... (no changes) ... */ console.log(`Missed ${dropData.type} drop!`); lives--; updateUI(); if (lives <= 0 && gameIsRunning) { endGame(); } }
         function movePlayerLeft() { /* ... (no changes) ... */ if (!gameIsRunning || isSuperJugActive) return; let nextPosition = playerPosition; if (playerPosition === 'right') { nextPosition = 'center'; } else if (playerPosition === 'center') { nextPosition = 'left'; } if (nextPosition !== playerPosition) { playerPosition = nextPosition; player.classList.remove('left', 'center', 'right'); player.classList.add(playerPosition); } }
         function movePlayerRight() { /* ... (no changes) ... */ if (!gameIsRunning || isSuperJugActive) return; let nextPosition = playerPosition; let moved = false; if (playerPosition === 'left') { nextPosition = 'center'; } else if (playerPosition === 'center') { nextPosition = 'right'; } if (nextPosition !== playerPosition) { playerPosition = nextPosition; player.classList.remove('left', 'center', 'right'); player.classList.add(playerPosition); moved = true; } if (playerPosition === 'right' && jugMilkCount === MAX_JUG_CAPACITY) { if (jugMilkCount === MAX_JUG_CAPACITY) { emptyJug(); } } }
