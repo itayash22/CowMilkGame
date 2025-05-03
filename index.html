@@ -19,27 +19,25 @@
             top: 5%;
             width: 15%; /* Adjust if needed based on image aspect ratio */
             height: 10%;/* Adjust if needed based on image aspect ratio */
-            /* Removed background-color and border */
-            background-size: contain; /* Scale image within the div */
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             z-index: 1;
-            /* Remove text display properties */
-            /* display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #5a4d41; */
         }
         /* Assign specific images */
         #cow-left {
             left: 10%;
-            background-image: url('images/cow left.png'); /* Relative path */
+            background-image: url('images/cow left.png'); /* Assumes this name is correct */
         }
         #cow-center {
             left: 50%;
             transform: translateX(-50%);
-            background-image: url('images/cow forward.png'); /* Relative path */
+            background-image: url('images/cow forward.png'); /* Assumes this name is correct */
         }
         #cow-right {
             right: 10%;
-            background-image: url('images/right cow.png'); /* Relative path */
+            /* *** UPDATED FILENAME HERE *** */
+            background-image: url('images/cow-right.png'); /* Changed space to hyphen */
         }
 
         /* Drops */
@@ -139,3 +137,14 @@
     </script>
 </body>
 </html>
+```
+
+**Action Required:**
+
+1.  **Rename the file `right cow.png` to `cow-right.png`** in your GitHub repository's `images` folder.
+2.  Commit the change.
+3.  Upload this updated `index.html` (or `milk_collector.html`) file to your repository, overwriting the old one.
+4.  Wait a minute or two for GitHub Pages to update.
+5.  Hard refresh the game page in your browser (`Ctrl+Shift+R` or `Cmd+Shift+R`).
+
+Now all three cows should appear correct
