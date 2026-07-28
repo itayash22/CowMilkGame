@@ -23,6 +23,26 @@ conversation moves.
 
 ## The three focus modes
 
+## Auto-steps: the app studies the terrain
+
+Open a document and Focus Presenter reads it (locally): a **flow chart** becomes steps per
+box, a **contract** becomes steps per numbered section, a generic **document** becomes
+paragraph bands. The spotlight immediately previews the detected steps — hopping from one
+to the next inside the current view, looping at the fold — so you instantly see what to
+expect. Click once to take control, or hit ✕ / `P` to turn it off.
+
+- **Walk the room**: left-click anywhere = next step, right-click = back. A wireless
+  mouse is your presenter remote; every move is a smooth cinematic glide (and the view
+  scrolls only when the next step is past the fold).
+- **Voice jump**: hold `V` and say where to go — "email", "section 3.2.1" — and the
+  spotlight glides there. Push-to-talk is the default so other voices in the room can't
+  steer your deck; hands-free mode (🎤 button) requires a command phrase ("go to …"),
+  applies a confidence threshold and cooldown, and always shows what it heard.
+- **Typed jump**: `Ctrl+K` — same matcher, no microphone needed.
+- **Audience screen** (📺): opens a second window showing **only the sheet** — no
+  toolbar, no handles — live-synced with everything you do. Drag it to the projector or
+  share it in the video call, and drive from your own window.
+
 | Mode | Key | What it does |
 |---|---|---|
 | **Slate** | `S` | An opaque panel hiding one area. Spawn as many as you like. |

@@ -124,6 +124,41 @@
   #empty small{display:block; margin-top:12px; color:var(--dim); line-height:1.6}
   body.dragover #empty .card{border-color:var(--acc)}
 
+  /* ---------- auto-steps chip, palette, audience ---------- */
+  #stepchip{position:fixed; bottom:64px; left:50%; transform:translateX(-50%);
+    background:var(--chrome2); border:1px solid var(--acc); color:var(--txt);
+    border-radius:999px; padding:6px 10px 6px 16px; font-size:13px; z-index:60; display:none;
+    align-items:center; gap:8px; white-space:nowrap; box-shadow:0 4px 18px rgba(0,0,0,.4)}
+  #stepchip.show{display:flex}
+  #stepchip b{color:var(--acc)}
+  #stepoff{background:none; border:0; color:var(--dim); cursor:pointer; font-size:13px; padding:2px 6px}
+  #stepoff:hover{color:#e5534b}
+  body.tear #hint{bottom:106px}
+  #bVoice.listening{background:rgba(229,83,75,.25); border-color:#e5534b}
+
+  #palette{position:fixed; top:18%; left:50%; transform:translateX(-50%); width:min(480px,90vw);
+    background:var(--chrome); border:1px solid var(--acc); border-radius:12px; padding:10px;
+    z-index:80; display:none; box-shadow:0 12px 40px rgba(0,0,0,.55)}
+  #palette.show{display:block}
+  #palq{width:100%; background:var(--chrome2); color:var(--txt); border:1px solid var(--line);
+    border-radius:8px; padding:9px 12px; font:inherit; outline:none}
+  #palq:focus{border-color:var(--acc)}
+  #palres{margin-top:6px}
+  #palres .pr{padding:7px 10px; border-radius:8px; cursor:pointer; color:var(--dim);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  #palres .pr b{color:var(--txt); font-weight:600}
+  #palres .pr.hot,#palres .pr:hover{background:var(--accSoft); color:var(--txt)}
+
+  #audFS{position:fixed; right:14px; bottom:14px; z-index:90; display:none;
+    background:var(--chrome2); color:var(--txt); border:1px solid var(--line); border-radius:10px;
+    padding:8px 14px; cursor:pointer; font:inherit; opacity:.85}
+  body.audience #audFS{display:block}
+  body.audience.fs #audFS{display:none}
+  body.audience #toolbar,body.audience #empty,body.audience #hint,body.audience #stepchip,
+  body.audience #toast,body.audience #palette{display:none!important}
+  body.audience .slate,body.audience #spot,body.audience .hole{pointer-events:none!important; outline:none!important}
+  body.audience .dot,body.audience .kill,body.audience .seam,body.audience .strip{display:none!important}
+
   /* ---------- toast & help ---------- */
   #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
     background:var(--chrome2); border:1px solid var(--line); border-radius:10px; padding:9px 16px;
@@ -162,6 +197,10 @@
   <button id="bClear" disabled title="Kill all slates and the spotlight">
     <svg viewBox="0 0 16 16"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
     Clear<kbd>X</kbd></button>
+  <span class="sep"></span>
+  <button id="bSteps" disabled title="Auto-steps: the app studies the document (flow chart, contract, …) and the spotlight walks its steps. Left-click = next, right-click = back">⚡ Steps<kbd>P</kbd></button>
+  <button id="bVoice" disabled title="Voice jump — hold V and say where to go ('email', 'section 3.2'). Click to toggle hands-free listening ('go to …')">🎤<kbd>V</kbd></button>
+  <button id="bPresent" disabled title="Audience screen: opens a clean window showing only the sheet — drag it to the projector">📺 Screen</button>
   <span class="sep"></span>
   <div class="swatches" title="Slate style — paper, dark, frosted glass">
     <button class="sw on" data-st="paper"></button>
@@ -203,6 +242,18 @@
 </main>
 
 <div id="toast"></div>
+
+<div id="stepchip">
+  <span id="stepinfo"></span>
+  <button id="stepoff" title="Turn auto-steps off">✕</button>
+</div>
+
+<div id="palette">
+  <input id="palq" type="text" placeholder="Jump to… (name or section number)" autocomplete="off" spellcheck="false">
+  <div id="palres"></div>
+</div>
+
+<button id="audFS" title="Fullscreen">⛶ Fullscreen</button>
 
 <dialog id="help">
   <h2>Keyboard shortcuts</h2>
