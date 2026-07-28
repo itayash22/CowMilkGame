@@ -21,14 +21,16 @@
   body.zen #toolbar{display:none}
   .brand{font-weight:650; letter-spacing:.2px; margin-right:6px; white-space:nowrap}
   .brand b{color:var(--acc)}
-  #toolbar button{background:var(--chrome2); color:var(--txt); border:1px solid var(--line);
+  #toolbar button{display:inline-flex; align-items:center; gap:6px;
+    background:var(--chrome2); color:var(--txt); border:1px solid var(--line);
     border-radius:8px; padding:6px 11px; cursor:pointer; font:inherit; white-space:nowrap}
+  #toolbar button svg{width:15px; height:15px; flex:none; fill:currentColor}
   #toolbar button:hover{border-color:var(--acc)}
   #toolbar button:disabled{opacity:.4; cursor:default; border-color:var(--line)}
   #toolbar button.on{background:var(--accSoft); border-color:var(--acc)}
   .sep{width:1px; align-self:stretch; background:var(--line); margin:0 4px}
   kbd{font:11px ui-monospace,Menlo,monospace; color:var(--dim); border:1px solid var(--line);
-    border-radius:4px; padding:0 4px; margin-left:6px}
+    border-radius:4px; padding:0 4px; margin-left:2px}
   .swatches{display:flex; gap:6px; align-items:center}
   .sw{width:24px; height:24px; border-radius:6px; border:2px solid var(--line); cursor:pointer; padding:0}
   .sw.on{border-color:var(--acc)}
@@ -37,6 +39,13 @@
   .sw[data-st="frost"]{background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.25))}
   #op{width:90px; accent-color:var(--acc)}
   #zpct{min-width:52px; text-align:center; color:var(--dim); font-variant-numeric:tabular-nums}
+
+  /* mode hint pill (shown while Tear mode is on) */
+  #hint{position:fixed; bottom:64px; left:50%; transform:translateX(-50%);
+    background:var(--accSoft); border:1px solid var(--acc); color:var(--txt);
+    border-radius:999px; padding:6px 16px; font-size:13px; z-index:60; display:none;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); white-space:nowrap}
+  body.tear #hint{display:block}
 
   /* ---------- viewport / document ---------- */
   #viewport{flex:1; overflow:auto; position:relative; scrollbar-color:#3a4150 var(--bg)}
@@ -49,14 +58,29 @@
   #overlay{position:absolute; inset:0; pointer-events:none; z-index:5}
   .slate,#spot{position:absolute; pointer-events:auto; touch-action:none; cursor:grab}
   .slate:active,#spot:active{cursor:grabbing}
-  .slate.paper{background:#fff}
-  .slate.dark{background:#101216}
-  .slate.frost{background:rgba(250,250,252,.38); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+  body.tear .slate{cursor:crosshair}
+  .sheet{position:absolute; inset:0; pointer-events:none}
+  .sheet.paper{background:#fff}
+  .sheet.dark{background:#101216}
+  .sheet.frost{background:rgba(250,250,252,.38); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
   .slate{outline:1px dashed transparent; outline-offset:-1px}
   .slate:hover,.slate.sel{outline-color:var(--accSoft)}
   .slate.sel{outline-color:var(--acc)}
   #spot{border-radius:12px; outline:1px dashed transparent; outline-offset:-1px}
   #spot:hover,#spot.sel{outline-color:var(--acc)}
+
+  /* tears (holes in a slate) */
+  .hole{position:absolute; pointer-events:auto; touch-action:none; cursor:grab;
+    outline:1px dashed transparent; outline-offset:-1px; z-index:1}
+  .hole:hover{outline-color:var(--acc)}
+  body.tear .hole{cursor:pointer}
+  .seam{position:absolute; top:2px; right:2px; width:20px; height:20px; line-height:18px;
+    text-align:center; border-radius:6px; border:1px solid var(--acc); background:var(--chrome);
+    color:var(--txt); font-size:12px; cursor:pointer; opacity:0; transition:opacity .12s; z-index:3}
+  .hole:hover .seam{opacity:.95}
+  .seam:hover{background:var(--accSoft)}
+  .rubber{position:absolute; border:1.5px dashed var(--acc); background:rgba(79,142,247,.15);
+    pointer-events:none; z-index:4}
 
   /* resize strips (invisible, fat hit areas) + corner dots */
   .strip{position:absolute; opacity:0}
@@ -66,7 +90,8 @@
   .strip[data-h="e"]{top:0; bottom:0; right:-5px; width:12px; cursor:ew-resize}
   .dot{position:absolute; width:12px; height:12px; background:var(--acc); border:2px solid #fff;
     border-radius:3px; opacity:0; transition:opacity .12s; z-index:2}
-  .slate:hover .dot,.slate.sel .dot,#spot:hover .dot,#spot.sel .dot{opacity:1}
+  .slate:hover >.dot,.slate.sel >.dot,#spot:hover .dot,#spot.sel .dot,.hole:hover >.dot{opacity:1}
+  .hole >.dot{width:10px; height:10px}
   .dot[data-h="nw"]{left:-6px; top:-6px; cursor:nwse-resize}
   .dot[data-h="ne"]{right:-6px; top:-6px; cursor:nesw-resize}
   .dot[data-h="sw"]{left:-6px; bottom:-6px; cursor:nesw-resize}
@@ -78,19 +103,25 @@
   .kill{position:absolute; top:4px; right:4px; width:22px; height:22px; line-height:20px;
     text-align:center; border-radius:6px; border:1px solid var(--line); background:var(--chrome);
     color:var(--txt); font-size:13px; cursor:pointer; opacity:0; transition:opacity .12s; z-index:3}
-  .slate:hover .kill,.slate.sel .kill{opacity:.95}
+  .slate:hover >.kill,.slate.sel >.kill{opacity:.95}
   .kill:hover{border-color:#e5534b; color:#e5534b}
 
   /* ---------- empty state ---------- */
   #empty{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:24px}
-  #empty .card{max-width:560px; text-align:center; border:2px dashed var(--line); border-radius:16px;
-    padding:40px 36px; background:rgba(23,26,33,.6)}
+  #empty .card{max-width:600px; text-align:center; border:2px dashed var(--line); border-radius:16px;
+    padding:38px 36px; background:rgba(23,26,33,.6)}
   #empty h1{font-size:22px; margin-bottom:10px}
   #empty h1 b{color:var(--acc)}
   #empty p{color:var(--dim); margin-bottom:8px}
-  #empty .big{display:inline-block; margin:14px 0 4px; background:var(--acc); color:#fff; border:0;
+  #empty .steps{display:flex; gap:10px; justify-content:center; margin:20px 0 6px; flex-wrap:wrap}
+  #empty .step{flex:1 1 150px; max-width:180px; border:1px solid var(--line); border-radius:12px;
+    padding:12px 10px; font-size:12.5px; color:var(--dim); background:var(--chrome)}
+  #empty .step b{display:block; color:var(--txt); font-size:13px; margin-bottom:4px}
+  #empty .step .n{display:inline-block; width:20px; height:20px; line-height:20px; border-radius:50%;
+    background:var(--acc); color:#fff; font-size:11px; margin-bottom:6px}
+  #empty .big{display:inline-block; margin:12px 0 4px; background:var(--acc); color:#fff; border:0;
     border-radius:10px; padding:10px 22px; font-size:15px; cursor:pointer}
-  #empty small{display:block; margin-top:14px; color:var(--dim); line-height:1.6}
+  #empty small{display:block; margin-top:12px; color:var(--dim); line-height:1.6}
   body.dragover #empty .card{border-color:var(--acc)}
 
   /* ---------- toast & help ---------- */
@@ -99,7 +130,7 @@
     opacity:0; transition:.2s; pointer-events:none; z-index:100; max-width:80vw; text-align:center}
   #toast.show{opacity:1; transform:translateX(-50%)}
   #help{border:1px solid var(--line); border-radius:14px; background:var(--chrome); color:var(--txt);
-    padding:22px 26px; max-width:520px; margin:auto}
+    padding:22px 26px; max-width:540px; margin:auto}
   #help::backdrop{background:rgba(0,0,0,.6)}
   #help h2{margin-bottom:12px; font-size:17px}
   #help table{border-collapse:collapse; width:100%}
@@ -111,13 +142,26 @@
 <body>
 <header id="toolbar">
   <span class="brand">◐ Focus<b>Presenter</b></span>
-  <button id="bOpen" title="Open a PDF or images — nothing leaves your computer">Open<kbd>O</kbd></button>
+  <button id="bOpen" title="Open a PDF or images — nothing leaves your computer">
+    <svg viewBox="0 0 16 16"><path d="M1.5 4.5A1.5 1.5 0 0 1 3 3h3l1.5 2H13a1.5 1.5 0 0 1 1.5 1.5V12A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12z"/></svg>
+    Open<kbd>O</kbd></button>
   <input id="file" type="file" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml" multiple hidden>
   <span class="sep"></span>
-  <button id="bSlate" disabled title="Spawn a slate that hides one area">+ Slate<kbd>S</kbd></button>
-  <button id="bCurtain" disabled title="Spawn a full-width curtain hiding everything below">+ Curtain<kbd>C</kbd></button>
-  <button id="bSpot" disabled title="Dim everything except one movable window">Spotlight<kbd>L</kbd></button>
-  <button id="bClear" disabled title="Kill all slates and the spotlight">Clear<kbd>X</kbd></button>
+  <button id="bSlate" disabled title="Spawn a slate that hides one area">
+    <svg viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.2"/></svg>
+    Slate<kbd>S</kbd></button>
+  <button id="bCurtain" disabled title="Spawn a full-width curtain hiding everything below">
+    <svg viewBox="0 0 16 16"><path d="M2 2.5h12v6H2z"/><path d="M2 11h12v1.6H2z" opacity=".5"/></svg>
+    Curtain<kbd>C</kbd></button>
+  <button id="bSpot" disabled title="Dim everything except one movable window">
+    <svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.5 2.5h13v11h-13zM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+    Spotlight<kbd>L</kbd></button>
+  <button id="bTear" disabled title="Tear mode: drag on a slate to tear a hole that lets the content show through; click a tear to seam it closed">
+    <svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2 3h12v10H2zm3.1 3.2 2.6-1.1 2.4 1.5-.5 2.5-2.7.9-2-1.9z"/></svg>
+    Tear<kbd>T</kbd></button>
+  <button id="bClear" disabled title="Kill all slates and the spotlight">
+    <svg viewBox="0 0 16 16"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+    Clear<kbd>X</kbd></button>
   <span class="sep"></span>
   <div class="swatches" title="Slate style — paper, dark, frosted glass">
     <button class="sw on" data-st="paper"></button>
@@ -130,9 +174,13 @@
   <span id="zpct">100%</span>
   <button id="bZi" disabled title="Zoom in — stays sharp at any magnification">+</button>
   <button id="bFit" disabled title="Fit page width">Fit<kbd>W</kbd></button>
-  <button id="bFull" title="Fullscreen">⛶<kbd>F</kbd></button>
+  <button id="bFull" title="Fullscreen">
+    <svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <kbd>F</kbd></button>
   <button id="bHelp" title="Keyboard shortcuts">?</button>
 </header>
+
+<div id="hint">✂ Tear mode — drag on a slate to let light in · click a tear to seam it · <b>T</b> exits</div>
 
 <main id="viewport">
   <div id="doc"><div id="overlay"></div></div>
@@ -140,6 +188,11 @@
     <div class="card">
       <h1>Present only what you're <b>talking about</b></h1>
       <p>Drop a <strong>PDF</strong> or images here — or paste a screenshot with <strong>Ctrl&#8239;+&#8239;V</strong>.</p>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><b>Open your flow</b>PDF, images, or a pasted screenshot of any tool</div>
+        <div class="step"><span class="n">2</span><b>Cover it</b>Slates &amp; curtains hide whatever isn't being discussed</div>
+        <div class="step"><span class="n">3</span><b>Reveal live</b>Slide, tear holes, seam them back — as the meeting moves</div>
+      </div>
       <button class="big" id="bOpen2">Open a file…</button>
       <small>
         PowerPoint / Keynote / Google Slides: use <em>File → Export / Download → PDF</em>, then open it here.<br>
@@ -156,6 +209,7 @@
   <table>
     <tr><td>S</td><td>spawn a slate (hides an area)</td></tr>
     <tr><td>C</td><td>spawn a curtain (hides everything below)</td></tr>
+    <tr><td>T</td><td>tear mode — drag on a slate to tear a hole; click a tear to seam it</td></tr>
     <tr><td>L</td><td>toggle spotlight (dims everything else)</td></tr>
     <tr><td>Delete / ✕</td><td>kill the selected slate</td></tr>
     <tr><td>X</td><td>kill all slates &amp; spotlight</td></tr>
@@ -164,11 +218,13 @@
     <tr><td>W</td><td>fit width &nbsp;·&nbsp; 0 = 100%</td></tr>
     <tr><td>F</td><td>fullscreen &nbsp;·&nbsp; H = hide toolbar</td></tr>
     <tr><td>O</td><td>open file &nbsp;·&nbsp; Ctrl+V paste screenshot</td></tr>
-    <tr><td>Esc</td><td>deselect / close</td></tr>
+    <tr><td>Esc</td><td>exit tear mode / deselect / close</td></tr>
   </table>
-  <p>Drag a slate to move it. Drag any edge or corner to widen or reshape it — a curtain is just a
-     slate stretched to full width. Slates stick to the document, so scrolling and zooming keep them
-     glued to the exact spot they cover.</p>
+  <p>Drag a slate to move it; drag any edge or corner to widen or reshape it — a curtain is just a
+     slate stretched to full width. Tears are holes in a slate that let the content show through:
+     they move with their slate, can be dragged and resized like small windows, and are seamed
+     closed with their ⊕ button (or a click in tear mode). Slates stick to the document, so
+     scrolling and zooming keep them glued to the exact spot they cover.</p>
 </dialog>
 
 <script>
@@ -249,7 +305,7 @@ const state = {
   zoom: 1, dpr: Math.max(1, window.devicePixelRatio || 1),
   pdf: null, pages: [], docW: 0, docH: 0,
   slates: [], sel: null, spot: null,
-  style: 'paper', shade: 1, uid: 0,
+  style: 'paper', shade: 1, uid: 0, tear: false,
 };
 
 /* ---------------- helpers ---------------- */
@@ -332,7 +388,7 @@ function finishOpen(msg) {
   for (const p of state.pages) { p.top = y; y += p.h + GAP; }
   state.docH = y - GAP;
   $('#empty').style.display = 'none';
-  for (const id of ['bSlate', 'bCurtain', 'bSpot', 'bClear', 'bZi', 'bZo', 'bFit'])
+  for (const id of ['bSlate', 'bCurtain', 'bSpot', 'bTear', 'bClear', 'bZi', 'bZo', 'bFit'])
     $('#' + id).disabled = false;
   fitWidth();
   vp.scrollTop = 0; vp.scrollLeft = 0;
@@ -368,6 +424,31 @@ function placeRect(r) {
   const z = state.zoom, s = r.el.style;
   s.left = r.x * z + 'px'; s.top = r.y * z + 'px';
   s.width = r.w * z + 'px'; s.height = r.h * z + 'px';
+  if (r.holes) {
+    for (const h of r.holes) placeHole(h);
+    updateMask(r);
+  }
+}
+
+function placeHole(h) {
+  const z = state.zoom, s = h.el.style;
+  s.left = h.x * z + 'px'; s.top = h.y * z + 'px';
+  s.width = h.w * z + 'px'; s.height = h.h * z + 'px';
+}
+
+/* cut the holes out of the slate's sheet with an SVG alpha mask (evenodd) */
+function updateMask(sl) {
+  const st = sl.sheetEl.style;
+  if (!sl.holes.length) {
+    st.webkitMaskImage = st.maskImage = '';
+    return;
+  }
+  let d = `M0 0H${sl.w}V${sl.h}H0Z`;
+  for (const h of sl.holes) d += `M${h.x} ${h.y}h${h.w}v${h.h}h${-h.w}Z`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sl.w} ${sl.h}" preserveAspectRatio="none"><path fill-rule="evenodd" fill="#fff" d="${d}"/></svg>`;
+  const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  st.webkitMaskImage = st.maskImage = url;
+  st.webkitMaskSize = st.maskSize = '100% 100%';
 }
 
 function setZoom(nz, ax, ay) {
@@ -491,10 +572,14 @@ function spawnSlate(rect) {
     w: vp.clientWidth * 0.5 / z, h: vp.clientHeight * 0.38 / z,
   };
   if (!rect) { r.x = c.x - r.w / 2; r.y = c.y - r.h / 2; }
-  const sl = { id: ++state.uid, ...r };
+  const sl = { id: ++state.uid, holes: [], ...r };
   const el = document.createElement('div');
-  el.className = 'slate ' + state.style;
-  el.style.opacity = state.shade;
+  el.className = 'slate';
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet ' + state.style;
+  sheet.style.opacity = state.shade;
+  el.appendChild(sheet);
+  sl.sheetEl = sheet;
   const kill = document.createElement('button');
   kill.className = 'kill'; kill.textContent = '×'; kill.title = 'Kill this slate (Delete)';
   kill.addEventListener('click', e => { e.stopPropagation(); killSlate(sl); });
@@ -571,11 +656,127 @@ function select(r) {
 
 function applyShade() {
   for (const sl of state.slates) {
-    sl.el.className = 'slate ' + state.style + (sl === state.sel ? ' sel' : '');
-    sl.el.style.opacity = state.shade;
+    sl.sheetEl.className = 'sheet ' + state.style;
+    sl.sheetEl.style.opacity = state.shade;
   }
   if (state.spot)
     state.spot.el.style.boxShadow = '0 0 0 200000px rgba(8,10,15,' + (0.94 * state.shade).toFixed(3) + ')';
+}
+
+/* ---------------- tears (holes that let light through a slate) ---------------- */
+
+function setTear(on) {
+  state.tear = on;
+  document.body.classList.toggle('tear', on);
+  $('#bTear').classList.toggle('on', on);
+}
+
+function toggleTear() {
+  setTear(!state.tear);
+  if (state.tear && !state.slates.length)
+    toast('Tear mode is on, but there is no slate yet — press S or C to spawn one first');
+}
+
+let tearHintShown = false;
+
+function startTear(sl, e) {
+  const z = state.zoom, box = sl.el.getBoundingClientRect();
+  const x0 = clamp((e.clientX - box.left) / z, 0, sl.w);
+  const y0 = clamp((e.clientY - box.top) / z, 0, sl.h);
+  const rub = document.createElement('div');
+  rub.className = 'rubber';
+  sl.el.appendChild(rub);
+  sl.el.setPointerCapture(e.pointerId);
+  let cur = { x: x0, y: y0, w: 0, h: 0 };
+  const move = ev => {
+    const cx = clamp((ev.clientX - box.left) / z, 0, sl.w);
+    const cy = clamp((ev.clientY - box.top) / z, 0, sl.h);
+    cur = { x: Math.min(x0, cx), y: Math.min(y0, cy), w: Math.abs(cx - x0), h: Math.abs(cy - y0) };
+    rub.style.left = cur.x * z + 'px'; rub.style.top = cur.y * z + 'px';
+    rub.style.width = cur.w * z + 'px'; rub.style.height = cur.h * z + 'px';
+  };
+  const up = () => {
+    sl.el.removeEventListener('pointermove', move);
+    sl.el.removeEventListener('pointerup', up);
+    sl.el.removeEventListener('pointercancel', up);
+    rub.remove();
+    if (cur.w > 8 && cur.h > 8) {
+      addHole(sl, cur);
+      if (!tearHintShown) {
+        tearHintShown = true;
+        toast('Torn open — light is in. Drag or resize the tear; seam it with its ⊕ or a click in tear mode');
+      }
+    }
+  };
+  sl.el.addEventListener('pointermove', move);
+  sl.el.addEventListener('pointerup', up);
+  sl.el.addEventListener('pointercancel', up);
+}
+
+function addHole(sl, r) {
+  const h = { ...r };
+  const el = document.createElement('div');
+  el.className = 'hole';
+  const seam = document.createElement('button');
+  seam.className = 'seam'; seam.textContent = '⊕'; seam.title = 'Seam this tear closed';
+  seam.addEventListener('click', e => { e.stopPropagation(); seamHole(sl, h); });
+  el.appendChild(seam);
+  for (const hd of ['nw', 'ne', 'sw', 'se']) {
+    const d = document.createElement('div');
+    d.className = 'dot'; d.dataset.h = hd; el.appendChild(d);
+  }
+  h.el = el;
+  sl.el.appendChild(el);
+  sl.holes.push(h);
+  dragifyHole(sl, h);
+  placeHole(h);
+  updateMask(sl);
+  return h;
+}
+
+function seamHole(sl, h) {
+  h.el.remove();
+  sl.holes = sl.holes.filter(x => x !== h);
+  updateMask(sl);
+}
+
+function clampHoles(sl) {
+  for (const h of sl.holes) {
+    h.w = Math.min(h.w, sl.w); h.h = Math.min(h.h, sl.h);
+    h.x = clamp(h.x, 0, sl.w - h.w); h.y = clamp(h.y, 0, sl.h - h.h);
+  }
+}
+
+function dragifyHole(sl, h) {
+  h.el.addEventListener('pointerdown', e => {
+    if (e.target.classList.contains('seam')) { e.stopPropagation(); return; }
+    e.preventDefault(); e.stopPropagation();
+    if (state.tear) { seamHole(sl, h); return; }   // in tear mode a click seams it back
+    select(sl);
+    const hd = e.target.dataset.h || 'move';
+    const z = state.zoom, sx = e.clientX, sy = e.clientY, o = { x: h.x, y: h.y, w: h.w, h: h.h };
+    h.el.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dx = (ev.clientX - sx) / z, dy = (ev.clientY - sy) / z;
+      if (hd === 'move') { h.x = o.x + dx; h.y = o.y + dy; }
+      if (hd.includes('e')) h.w = Math.max(10, o.w + dx);
+      if (hd.includes('s')) h.h = Math.max(10, o.h + dy);
+      if (hd.includes('w')) { h.w = Math.max(10, o.w - dx); h.x = o.x + o.w - h.w; }
+      if (hd.includes('n')) { h.h = Math.max(10, o.h - dy); h.y = o.y + o.h - h.h; }
+      h.w = Math.min(h.w, sl.w); h.h = Math.min(h.h, sl.h);
+      h.x = clamp(h.x, 0, sl.w - h.w); h.y = clamp(h.y, 0, sl.h - h.h);
+      placeHole(h);
+      updateMask(sl);
+    };
+    const up = () => {
+      h.el.removeEventListener('pointermove', move);
+      h.el.removeEventListener('pointerup', up);
+      h.el.removeEventListener('pointercancel', up);
+    };
+    h.el.addEventListener('pointermove', move);
+    h.el.addEventListener('pointerup', up);
+    h.el.addEventListener('pointercancel', up);
+  });
 }
 
 /* keep a nudged slate/spotlight on screen — the view follows it along the flow */
@@ -596,6 +797,7 @@ function dragify(r) {
   r.el.addEventListener('pointerdown', e => {
     if (e.target.classList.contains('kill')) return;
     e.preventDefault(); e.stopPropagation();
+    if (state.tear && r.holes) { startTear(r, e); return; }
     select(r);
     const h = e.target.dataset.h || 'move';
     const z = state.zoom, sx = e.clientX, sy = e.clientY, o = { x: r.x, y: r.y, w: r.w, h: r.h };
@@ -607,6 +809,7 @@ function dragify(r) {
       if (h.includes('s')) r.h = Math.max(MINSZ, o.h + dy);
       if (h.includes('w')) { r.w = Math.max(MINSZ, o.w - dx); r.x = o.x + o.w - r.w; }
       if (h.includes('n')) { r.h = Math.max(MINSZ, o.h - dy); r.y = o.y + o.h - r.h; }
+      if (h !== 'move' && r.holes) clampHoles(r);
       placeRect(r);
     };
     const up = ev => {
@@ -660,6 +863,7 @@ document.addEventListener('paste', e => {
 $('#bSlate').addEventListener('click', () => spawnSlate());
 $('#bCurtain').addEventListener('click', spawnCurtain);
 $('#bSpot').addEventListener('click', toggleSpot);
+$('#bTear').addEventListener('click', () => toggleTear());
 $('#bClear').addEventListener('click', () => killAllShades());
 $('#bZi').addEventListener('click', () => setZoom(state.zoom * 1.2));
 $('#bZo').addEventListener('click', () => setZoom(state.zoom / 1.2));
@@ -700,6 +904,7 @@ document.addEventListener('keydown', e => {
   const help = $('#help');
   if (e.key === 'Escape') {
     if (help.open) help.close();
+    else if (state.tear) setTear(false);
     else select(null);
     return;
   }
@@ -729,6 +934,7 @@ document.addEventListener('keydown', e => {
   else if (!hasDoc()) return;
   else if (k === 's') spawnSlate();
   else if (k === 'c') spawnCurtain();
+  else if (k === 't') toggleTear();
   else if (k === 'l') toggleSpot();
   else if (k === 'x') killAllShades();
   else if (k === 'w') fitWidth();

@@ -27,12 +27,15 @@ conversation moves.
 |---|---|---|
 | **Slate** | `S` | An opaque panel hiding one area. Spawn as many as you like. |
 | **Curtain** | `C` | A full-width slate hiding everything below a line. Drag its top edge down the flow to reveal step by step — the classic "sliding slate". |
+| **Tear** | `T` | Tear holes in a slate to *let light in* exactly where you want. Drag on a slate to tear; each tear is a live window you can drag and resize; seam it closed again with its `⊕` button (or a click while tear mode is on). |
 | **Spotlight** | `L` | Dims the whole document except one movable window. Best for non-linear charts where the relevant part isn't simply "next". |
 
 Every slate and the spotlight can be:
 - **moved** — drag it, or nudge with arrow keys (`Shift` = big steps; the view follows it
   automatically along a long flow),
 - **reshaped / widened at will** — drag any edge or corner,
+- **torn open and seamed back** — holes belong to their slate and move with it, so a torn
+  slate stays one physical object you're in full charge of,
 - **killed** — its `×` button, or select it and press `Delete`; `X` clears everything,
 - **re-spawned** — `S` / `C` / `L` at any time.
 

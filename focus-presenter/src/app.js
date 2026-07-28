@@ -27,7 +27,7 @@ const state = {
   zoom: 1, dpr: Math.max(1, window.devicePixelRatio || 1),
   pdf: null, pages: [], docW: 0, docH: 0,
   slates: [], sel: null, spot: null,
-  style: 'paper', shade: 1, uid: 0,
+  style: 'paper', shade: 1, uid: 0, tear: false,
 };
 
 /* ---------------- helpers ---------------- */
@@ -110,7 +110,7 @@ function finishOpen(msg) {
   for (const p of state.pages) { p.top = y; y += p.h + GAP; }
   state.docH = y - GAP;
   $('#empty').style.display = 'none';
-  for (const id of ['bSlate', 'bCurtain', 'bSpot', 'bClear', 'bZi', 'bZo', 'bFit'])
+  for (const id of ['bSlate', 'bCurtain', 'bSpot', 'bTear', 'bClear', 'bZi', 'bZo', 'bFit'])
     $('#' + id).disabled = false;
   fitWidth();
   vp.scrollTop = 0; vp.scrollLeft = 0;
@@ -146,6 +146,31 @@ function placeRect(r) {
   const z = state.zoom, s = r.el.style;
   s.left = r.x * z + 'px'; s.top = r.y * z + 'px';
   s.width = r.w * z + 'px'; s.height = r.h * z + 'px';
+  if (r.holes) {
+    for (const h of r.holes) placeHole(h);
+    updateMask(r);
+  }
+}
+
+function placeHole(h) {
+  const z = state.zoom, s = h.el.style;
+  s.left = h.x * z + 'px'; s.top = h.y * z + 'px';
+  s.width = h.w * z + 'px'; s.height = h.h * z + 'px';
+}
+
+/* cut the holes out of the slate's sheet with an SVG alpha mask (evenodd) */
+function updateMask(sl) {
+  const st = sl.sheetEl.style;
+  if (!sl.holes.length) {
+    st.webkitMaskImage = st.maskImage = '';
+    return;
+  }
+  let d = `M0 0H${sl.w}V${sl.h}H0Z`;
+  for (const h of sl.holes) d += `M${h.x} ${h.y}h${h.w}v${h.h}h${-h.w}Z`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sl.w} ${sl.h}" preserveAspectRatio="none"><path fill-rule="evenodd" fill="#fff" d="${d}"/></svg>`;
+  const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  st.webkitMaskImage = st.maskImage = url;
+  st.webkitMaskSize = st.maskSize = '100% 100%';
 }
 
 function setZoom(nz, ax, ay) {
@@ -269,10 +294,14 @@ function spawnSlate(rect) {
     w: vp.clientWidth * 0.5 / z, h: vp.clientHeight * 0.38 / z,
   };
   if (!rect) { r.x = c.x - r.w / 2; r.y = c.y - r.h / 2; }
-  const sl = { id: ++state.uid, ...r };
+  const sl = { id: ++state.uid, holes: [], ...r };
   const el = document.createElement('div');
-  el.className = 'slate ' + state.style;
-  el.style.opacity = state.shade;
+  el.className = 'slate';
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet ' + state.style;
+  sheet.style.opacity = state.shade;
+  el.appendChild(sheet);
+  sl.sheetEl = sheet;
   const kill = document.createElement('button');
   kill.className = 'kill'; kill.textContent = '×'; kill.title = 'Kill this slate (Delete)';
   kill.addEventListener('click', e => { e.stopPropagation(); killSlate(sl); });
@@ -349,11 +378,127 @@ function select(r) {
 
 function applyShade() {
   for (const sl of state.slates) {
-    sl.el.className = 'slate ' + state.style + (sl === state.sel ? ' sel' : '');
-    sl.el.style.opacity = state.shade;
+    sl.sheetEl.className = 'sheet ' + state.style;
+    sl.sheetEl.style.opacity = state.shade;
   }
   if (state.spot)
     state.spot.el.style.boxShadow = '0 0 0 200000px rgba(8,10,15,' + (0.94 * state.shade).toFixed(3) + ')';
+}
+
+/* ---------------- tears (holes that let light through a slate) ---------------- */
+
+function setTear(on) {
+  state.tear = on;
+  document.body.classList.toggle('tear', on);
+  $('#bTear').classList.toggle('on', on);
+}
+
+function toggleTear() {
+  setTear(!state.tear);
+  if (state.tear && !state.slates.length)
+    toast('Tear mode is on, but there is no slate yet — press S or C to spawn one first');
+}
+
+let tearHintShown = false;
+
+function startTear(sl, e) {
+  const z = state.zoom, box = sl.el.getBoundingClientRect();
+  const x0 = clamp((e.clientX - box.left) / z, 0, sl.w);
+  const y0 = clamp((e.clientY - box.top) / z, 0, sl.h);
+  const rub = document.createElement('div');
+  rub.className = 'rubber';
+  sl.el.appendChild(rub);
+  sl.el.setPointerCapture(e.pointerId);
+  let cur = { x: x0, y: y0, w: 0, h: 0 };
+  const move = ev => {
+    const cx = clamp((ev.clientX - box.left) / z, 0, sl.w);
+    const cy = clamp((ev.clientY - box.top) / z, 0, sl.h);
+    cur = { x: Math.min(x0, cx), y: Math.min(y0, cy), w: Math.abs(cx - x0), h: Math.abs(cy - y0) };
+    rub.style.left = cur.x * z + 'px'; rub.style.top = cur.y * z + 'px';
+    rub.style.width = cur.w * z + 'px'; rub.style.height = cur.h * z + 'px';
+  };
+  const up = () => {
+    sl.el.removeEventListener('pointermove', move);
+    sl.el.removeEventListener('pointerup', up);
+    sl.el.removeEventListener('pointercancel', up);
+    rub.remove();
+    if (cur.w > 8 && cur.h > 8) {
+      addHole(sl, cur);
+      if (!tearHintShown) {
+        tearHintShown = true;
+        toast('Torn open — light is in. Drag or resize the tear; seam it with its ⊕ or a click in tear mode');
+      }
+    }
+  };
+  sl.el.addEventListener('pointermove', move);
+  sl.el.addEventListener('pointerup', up);
+  sl.el.addEventListener('pointercancel', up);
+}
+
+function addHole(sl, r) {
+  const h = { ...r };
+  const el = document.createElement('div');
+  el.className = 'hole';
+  const seam = document.createElement('button');
+  seam.className = 'seam'; seam.textContent = '⊕'; seam.title = 'Seam this tear closed';
+  seam.addEventListener('click', e => { e.stopPropagation(); seamHole(sl, h); });
+  el.appendChild(seam);
+  for (const hd of ['nw', 'ne', 'sw', 'se']) {
+    const d = document.createElement('div');
+    d.className = 'dot'; d.dataset.h = hd; el.appendChild(d);
+  }
+  h.el = el;
+  sl.el.appendChild(el);
+  sl.holes.push(h);
+  dragifyHole(sl, h);
+  placeHole(h);
+  updateMask(sl);
+  return h;
+}
+
+function seamHole(sl, h) {
+  h.el.remove();
+  sl.holes = sl.holes.filter(x => x !== h);
+  updateMask(sl);
+}
+
+function clampHoles(sl) {
+  for (const h of sl.holes) {
+    h.w = Math.min(h.w, sl.w); h.h = Math.min(h.h, sl.h);
+    h.x = clamp(h.x, 0, sl.w - h.w); h.y = clamp(h.y, 0, sl.h - h.h);
+  }
+}
+
+function dragifyHole(sl, h) {
+  h.el.addEventListener('pointerdown', e => {
+    if (e.target.classList.contains('seam')) { e.stopPropagation(); return; }
+    e.preventDefault(); e.stopPropagation();
+    if (state.tear) { seamHole(sl, h); return; }   // in tear mode a click seams it back
+    select(sl);
+    const hd = e.target.dataset.h || 'move';
+    const z = state.zoom, sx = e.clientX, sy = e.clientY, o = { x: h.x, y: h.y, w: h.w, h: h.h };
+    h.el.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dx = (ev.clientX - sx) / z, dy = (ev.clientY - sy) / z;
+      if (hd === 'move') { h.x = o.x + dx; h.y = o.y + dy; }
+      if (hd.includes('e')) h.w = Math.max(10, o.w + dx);
+      if (hd.includes('s')) h.h = Math.max(10, o.h + dy);
+      if (hd.includes('w')) { h.w = Math.max(10, o.w - dx); h.x = o.x + o.w - h.w; }
+      if (hd.includes('n')) { h.h = Math.max(10, o.h - dy); h.y = o.y + o.h - h.h; }
+      h.w = Math.min(h.w, sl.w); h.h = Math.min(h.h, sl.h);
+      h.x = clamp(h.x, 0, sl.w - h.w); h.y = clamp(h.y, 0, sl.h - h.h);
+      placeHole(h);
+      updateMask(sl);
+    };
+    const up = () => {
+      h.el.removeEventListener('pointermove', move);
+      h.el.removeEventListener('pointerup', up);
+      h.el.removeEventListener('pointercancel', up);
+    };
+    h.el.addEventListener('pointermove', move);
+    h.el.addEventListener('pointerup', up);
+    h.el.addEventListener('pointercancel', up);
+  });
 }
 
 /* keep a nudged slate/spotlight on screen — the view follows it along the flow */
@@ -374,6 +519,7 @@ function dragify(r) {
   r.el.addEventListener('pointerdown', e => {
     if (e.target.classList.contains('kill')) return;
     e.preventDefault(); e.stopPropagation();
+    if (state.tear && r.holes) { startTear(r, e); return; }
     select(r);
     const h = e.target.dataset.h || 'move';
     const z = state.zoom, sx = e.clientX, sy = e.clientY, o = { x: r.x, y: r.y, w: r.w, h: r.h };
@@ -385,6 +531,7 @@ function dragify(r) {
       if (h.includes('s')) r.h = Math.max(MINSZ, o.h + dy);
       if (h.includes('w')) { r.w = Math.max(MINSZ, o.w - dx); r.x = o.x + o.w - r.w; }
       if (h.includes('n')) { r.h = Math.max(MINSZ, o.h - dy); r.y = o.y + o.h - r.h; }
+      if (h !== 'move' && r.holes) clampHoles(r);
       placeRect(r);
     };
     const up = ev => {
@@ -438,6 +585,7 @@ document.addEventListener('paste', e => {
 $('#bSlate').addEventListener('click', () => spawnSlate());
 $('#bCurtain').addEventListener('click', spawnCurtain);
 $('#bSpot').addEventListener('click', toggleSpot);
+$('#bTear').addEventListener('click', () => toggleTear());
 $('#bClear').addEventListener('click', () => killAllShades());
 $('#bZi').addEventListener('click', () => setZoom(state.zoom * 1.2));
 $('#bZo').addEventListener('click', () => setZoom(state.zoom / 1.2));
@@ -478,6 +626,7 @@ document.addEventListener('keydown', e => {
   const help = $('#help');
   if (e.key === 'Escape') {
     if (help.open) help.close();
+    else if (state.tear) setTear(false);
     else select(null);
     return;
   }
@@ -507,6 +656,7 @@ document.addEventListener('keydown', e => {
   else if (!hasDoc()) return;
   else if (k === 's') spawnSlate();
   else if (k === 'c') spawnCurtain();
+  else if (k === 't') toggleTear();
   else if (k === 'l') toggleSpot();
   else if (k === 'x') killAllShades();
   else if (k === 'w') fitWidth();
