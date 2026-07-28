@@ -113,7 +113,54 @@ without it; add it once the listing has reviews and installs.
   *osek murshe*. The Chrome Web Store's EU trader rules still require your name/address
   on the listing when charging EU users.
 
-## 6. Recommendation
+## 6. Competition and a freemium model
+
+### Competitive landscape (researched Jul 2026)
+
+| Tool | Platform | Price | What it does | What it lacks vs us |
+|---|---|---|---|---|
+| Screen Shade / CraftyShade | Chrome ext. | Free | Sliding shade over any webpage | Screen-anchored only; no PDF deck, no multi-slate, no tears, no zoom engine |
+| Page Spotlight | Chrome ext. | Free | Dim overlay + laser cursor on web pages | Same: no document, no reveal choreography |
+| ZoomIt (Microsoft) | Win/Mac | Free | Screen zoom + draw; presenter classic | No hide/reveal model at all; huge but different job |
+| Epic Pen | Win | Free + $35 Pro | Draw on screen | Annotation, not attention control |
+| Presentify | Mac | $14.99 one-time | Annotate + cursor highlight | Mac-only, screen-anchored |
+| Classroomscreen | Web | Free + $36/yr Pro | Teacher dashboard incl. curtain widget | Web-dependent, classroom-shaped, not for business decks |
+| Logitech Spotlight | Hardware | ~$130 | Physical remote with on-screen spotlight | Validates paid demand for exactly this attention problem |
+
+Takeaways: the *concept* is validated on both ends (free teacher shades with big install
+counts; $130 hardware for professionals), but **nobody combines document-anchored covers
+(slates/curtain/tears that stick to the content through scroll and zoom) with a real PDF
+engine, offline**. The free competitors are screen-anchored toys; the paid ones are
+annotation pens. That's the differentiation to state on the listing. Price anchors in
+this market: $15–35 one-time, $36/year.
+
+### Proposed freemium split
+
+**Free — "worth 5 stars on its own":** open PDF/images/paste, full sharp-zoom engine,
+**one active cover** (slate *or* curtain) **plus the spotlight**, paper/dark styles,
+fullscreen. A solo presenter with a linear flow never has to pay — they become installs,
+ratings, and word of mouth.
+
+**Pro — the "I present for a living" tier:** unlimited simultaneous slates ·
+**tear & seam** · frosted-glass style · saved layouts per file (covers restored when the
+deck is reopened — prepare the choreography before the meeting) · later, overlay-on-any-
+tab as the flagship addition. The upgrade moment is natural: the second slate or the
+first tear opens the paywall mid-preparation (never mid-presentation — if a license
+check can't complete, Pro features stay unlocked).
+
+**Pricing** (Paddle 5% + 50¢ shapes this):
+
+| Plan | Price | Paddle cut | Notes |
+|---|---|---|---|
+| Monthly | $4/mo | ~17% | Exists mainly as the anchor |
+| **Yearly** | **$24/yr ($2/mo)** | ~7% | The headline: "50% off monthly" |
+| Launch lifetime | $39 one-time | ~6% | Matches Epic Pen/Presentify buyers; early cash + reviews; retire later |
+| Education | Free or 50% off | — | Teachers are the loudest reviewers; goodwill compounds |
+
+Rule-of-thumb expectations: browser-extension freemium converts ~0.5–4% of active users;
+the yearly plan should be the default-selected option at checkout.
+
+## 7. Recommendation
 
 1. **Ship the MV3 extension now** (scaffold is ready): free, minimal permissions, fast
    review track. Keep the single HTML file as the frictionless demo / fallback channel.
