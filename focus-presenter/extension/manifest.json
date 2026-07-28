@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Focus Presenter",
+  "version": "0.1.0",
+  "description": "Present flows, charts and slides while keeping your audience focused on exactly what you're talking about. Slates, curtains, tears and a spotlight — fully offline.",
+  "action": { "default_title": "Open Focus Presenter" },
+  "background": { "service_worker": "sw.js" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "offline_enabled": true
+}

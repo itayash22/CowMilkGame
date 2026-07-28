@@ -289,9 +289,13 @@
    and tiles render lazily near the visible area with far-away eviction, so
    very long exported flow charts stay sharp and memory stays bounded. */
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
-  new Blob([document.getElementById('pdf-worker-code').textContent], { type: 'text/javascript' })
-);
+/* Two build targets share this file:
+   - single-file build: the worker source is inlined in a text/plain tag → blob URL
+   - MV3 extension build: no inline scripts allowed → load the worker as a packaged file */
+const workerTag = document.getElementById('pdf-worker-code');
+pdfjsLib.GlobalWorkerOptions.workerSrc = workerTag
+  ? URL.createObjectURL(new Blob([workerTag.textContent], { type: 'text/javascript' }))
+  : 'vendor/pdf.worker.min.js';
 
 const $ = s => document.querySelector(s);
 const vp = $('#viewport'), doc = $('#doc'), overlay = $('#overlay');
