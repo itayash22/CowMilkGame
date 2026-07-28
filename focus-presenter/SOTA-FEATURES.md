@@ -60,9 +60,11 @@ reliably use.
     Meet/Zoom and keep a **Document Picture-in-Picture** floating control strip —
     presenter drives from the PiP while the shared tab stays clean. Nobody in the
     category has this.
-11. **Phone as remote** — honest note: needs a signaling channel (WebRTC/QR pairing), so
-    it breaks pure-offline. Option: offer it as an explicitly online convenience, or
-    skip — clicker support (B6) covers the need offline.
+11. **Phone as remote** ⭐ — QR-pair the phone as a smart remote: next/prev, jump-to-anything,
+    blackout, live current/next-step readout. Needs a tiny hosted relay (only encrypted
+    control events travel — the document never leaves the laptop), which makes it the
+    natural Pro anchor: free = your machine, Pro = ours. Full design in
+    `EXPLORATION-phone-remote.md`.
 
 ## D. Async & capture (the Loom era)
 
