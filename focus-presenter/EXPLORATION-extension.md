@@ -91,7 +91,29 @@ a genuine differentiator, and it's the natural Pro feature. Cost: it needs `acti
 (or host) permissions → slower, stricter review and a heavier privacy story. Ship v1
 without it; add it once the listing has reviews and installs.
 
-## 5. Recommendation
+## 5. Selling from Israel — payment reality check
+
+- **Stripe does not operate in Israel**, so ExtensionPay (which requires your own Stripe
+  account) is off the table without a US entity. This removes the "default" extension
+  payment route.
+- **Paddle is the practical choice**: it acts as merchant of record, explicitly supports
+  Israel-based sellers, and pays out worldwide via wire transfer or **Payoneer** (an
+  Israeli-founded service, widely used locally). ~5% + 50¢ per transaction, and Paddle —
+  not you — is the seller toward end customers, so it handles US sales tax, EU VAT, etc.
+- **Lemon Squeezy** is comparable on paper but was acquired by Stripe and is being folded
+  into Stripe's stack — a riskier bet for an Israeli seller specifically.
+- **Later, at scale**: a US LLC via Stripe Atlas (+ US bank) reopens Stripe/ExtensionPay
+  and cuts fees to ~3%, at the cost of ~$500 setup plus yearly US filings — not worth it
+  before real revenue.
+- **Tax notes (verify with an Israeli accountant)**: with a merchant of record, your
+  income is B2B service revenue from a foreign company (Paddle, UK), which is typically
+  zero-rated for Israeli VAT as an export of services — you don't touch the 18% VAT
+  charged to end buyers, Paddle handles buyers' taxes in their countries. Business
+  registration as *osek patur* works up to roughly ₪120k/year turnover; above that,
+  *osek murshe*. The Chrome Web Store's EU trader rules still require your name/address
+  on the listing when charging EU users.
+
+## 6. Recommendation
 
 1. **Ship the MV3 extension now** (scaffold is ready): free, minimal permissions, fast
    review track. Keep the single HTML file as the frictionless demo / fallback channel.
