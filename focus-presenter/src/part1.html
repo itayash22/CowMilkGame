@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus Presenter</title>
+<style>
+  :root{
+    --bg:#0f1116; --chrome:#171a21; --chrome2:#1f232d; --line:#2a2f3a;
+    --txt:#e8eaf0; --dim:#9aa1ad; --acc:#4f8ef7; --accSoft:rgba(79,142,247,.35);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{background:var(--bg); color:var(--txt);
+    font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden; user-select:none}
+
+  /* ---------- toolbar ---------- */
+  #toolbar{display:flex; align-items:center; gap:8px; padding:8px 12px;
+    background:var(--chrome); border-bottom:1px solid var(--line); flex-wrap:wrap; z-index:50}
+  body.zen #toolbar{display:none}
+  .brand{font-weight:650; letter-spacing:.2px; margin-right:6px; white-space:nowrap}
+  .brand b{color:var(--acc)}
+  #toolbar button{background:var(--chrome2); color:var(--txt); border:1px solid var(--line);
+    border-radius:8px; padding:6px 11px; cursor:pointer; font:inherit; white-space:nowrap}
+  #toolbar button:hover{border-color:var(--acc)}
+  #toolbar button:disabled{opacity:.4; cursor:default; border-color:var(--line)}
+  #toolbar button.on{background:var(--accSoft); border-color:var(--acc)}
+  .sep{width:1px; align-self:stretch; background:var(--line); margin:0 4px}
+  kbd{font:11px ui-monospace,Menlo,monospace; color:var(--dim); border:1px solid var(--line);
+    border-radius:4px; padding:0 4px; margin-left:6px}
+  .swatches{display:flex; gap:6px; align-items:center}
+  .sw{width:24px; height:24px; border-radius:6px; border:2px solid var(--line); cursor:pointer; padding:0}
+  .sw.on{border-color:var(--acc)}
+  .sw[data-st="paper"]{background:#fff}
+  .sw[data-st="dark"]{background:#101216}
+  .sw[data-st="frost"]{background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.25))}
+  #op{width:90px; accent-color:var(--acc)}
+  #zpct{min-width:52px; text-align:center; color:var(--dim); font-variant-numeric:tabular-nums}
+
+  /* ---------- viewport / document ---------- */
+  #viewport{flex:1; overflow:auto; position:relative; scrollbar-color:#3a4150 var(--bg)}
+  #doc{position:relative; margin:24px auto}
+  .page{position:absolute; background:#fff; box-shadow:0 2px 14px rgba(0,0,0,.55)}
+  .page canvas,.page img{position:absolute; left:0; display:block}
+  .page img{width:100%; height:100%}
+
+  /* ---------- overlay: slates & spotlight ---------- */
+  #overlay{position:absolute; inset:0; pointer-events:none; z-index:5}
+  .slate,#spot{position:absolute; pointer-events:auto; touch-action:none; cursor:grab}
+  .slate:active,#spot:active{cursor:grabbing}
+  .slate.paper{background:#fff}
+  .slate.dark{background:#101216}
+  .slate.frost{background:rgba(250,250,252,.38); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+  .slate{outline:1px dashed transparent; outline-offset:-1px}
+  .slate:hover,.slate.sel{outline-color:var(--accSoft)}
+  .slate.sel{outline-color:var(--acc)}
+  #spot{border-radius:12px; outline:1px dashed transparent; outline-offset:-1px}
+  #spot:hover,#spot.sel{outline-color:var(--acc)}
+
+  /* resize strips (invisible, fat hit areas) + corner dots */
+  .strip{position:absolute; opacity:0}
+  .strip[data-h="n"]{left:0; right:0; top:-5px; height:12px; cursor:ns-resize}
+  .strip[data-h="s"]{left:0; right:0; bottom:-5px; height:12px; cursor:ns-resize}
+  .strip[data-h="w"]{top:0; bottom:0; left:-5px; width:12px; cursor:ew-resize}
+  .strip[data-h="e"]{top:0; bottom:0; right:-5px; width:12px; cursor:ew-resize}
+  .dot{position:absolute; width:12px; height:12px; background:var(--acc); border:2px solid #fff;
+    border-radius:3px; opacity:0; transition:opacity .12s; z-index:2}
+  .slate:hover .dot,.slate.sel .dot,#spot:hover .dot,#spot.sel .dot{opacity:1}
+  .dot[data-h="nw"]{left:-6px; top:-6px; cursor:nwse-resize}
+  .dot[data-h="ne"]{right:-6px; top:-6px; cursor:nesw-resize}
+  .dot[data-h="sw"]{left:-6px; bottom:-6px; cursor:nesw-resize}
+  .dot[data-h="se"]{right:-6px; bottom:-6px; cursor:nwse-resize}
+  .dot[data-h="n"]{left:calc(50% - 6px); top:-6px; cursor:ns-resize}
+  .dot[data-h="s"]{left:calc(50% - 6px); bottom:-6px; cursor:ns-resize}
+  .dot[data-h="w"]{left:-6px; top:calc(50% - 6px); cursor:ew-resize}
+  .dot[data-h="e"]{right:-6px; top:calc(50% - 6px); cursor:ew-resize}
+  .kill{position:absolute; top:4px; right:4px; width:22px; height:22px; line-height:20px;
+    text-align:center; border-radius:6px; border:1px solid var(--line); background:var(--chrome);
+    color:var(--txt); font-size:13px; cursor:pointer; opacity:0; transition:opacity .12s; z-index:3}
+  .slate:hover .kill,.slate.sel .kill{opacity:.95}
+  .kill:hover{border-color:#e5534b; color:#e5534b}
+
+  /* ---------- empty state ---------- */
+  #empty{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:24px}
+  #empty .card{max-width:560px; text-align:center; border:2px dashed var(--line); border-radius:16px;
+    padding:40px 36px; background:rgba(23,26,33,.6)}
+  #empty h1{font-size:22px; margin-bottom:10px}
+  #empty h1 b{color:var(--acc)}
+  #empty p{color:var(--dim); margin-bottom:8px}
+  #empty .big{display:inline-block; margin:14px 0 4px; background:var(--acc); color:#fff; border:0;
+    border-radius:10px; padding:10px 22px; font-size:15px; cursor:pointer}
+  #empty small{display:block; margin-top:14px; color:var(--dim); line-height:1.6}
+  body.dragover #empty .card{border-color:var(--acc)}
+
+  /* ---------- toast & help ---------- */
+  #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--chrome2); border:1px solid var(--line); border-radius:10px; padding:9px 16px;
+    opacity:0; transition:.2s; pointer-events:none; z-index:100; max-width:80vw; text-align:center}
+  #toast.show{opacity:1; transform:translateX(-50%)}
+  #help{border:1px solid var(--line); border-radius:14px; background:var(--chrome); color:var(--txt);
+    padding:22px 26px; max-width:520px; margin:auto}
+  #help::backdrop{background:rgba(0,0,0,.6)}
+  #help h2{margin-bottom:12px; font-size:17px}
+  #help table{border-collapse:collapse; width:100%}
+  #help td{padding:4px 8px 4px 0; color:var(--dim)}
+  #help td:first-child{color:var(--txt); white-space:nowrap}
+  #help p{margin-top:12px; color:var(--dim); font-size:13px}
+</style>
+</head>
+<body>
+<header id="toolbar">
+  <span class="brand">◐ Focus<b>Presenter</b></span>
+  <button id="bOpen" title="Open a PDF or images — nothing leaves your computer">Open<kbd>O</kbd></button>
+  <input id="file" type="file" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml" multiple hidden>
+  <span class="sep"></span>
+  <button id="bSlate" disabled title="Spawn a slate that hides one area">+ Slate<kbd>S</kbd></button>
+  <button id="bCurtain" disabled title="Spawn a full-width curtain hiding everything below">+ Curtain<kbd>C</kbd></button>
+  <button id="bSpot" disabled title="Dim everything except one movable window">Spotlight<kbd>L</kbd></button>
+  <button id="bClear" disabled title="Kill all slates and the spotlight">Clear<kbd>X</kbd></button>
+  <span class="sep"></span>
+  <div class="swatches" title="Slate style — paper, dark, frosted glass">
+    <button class="sw on" data-st="paper"></button>
+    <button class="sw" data-st="dark"></button>
+    <button class="sw" data-st="frost"></button>
+  </div>
+  <input id="op" type="range" min="35" max="100" value="100" title="Shade strength">
+  <span class="sep"></span>
+  <button id="bZo" disabled title="Zoom out">−</button>
+  <span id="zpct">100%</span>
+  <button id="bZi" disabled title="Zoom in — stays sharp at any magnification">+</button>
+  <button id="bFit" disabled title="Fit page width">Fit<kbd>W</kbd></button>
+  <button id="bFull" title="Fullscreen">⛶<kbd>F</kbd></button>
+  <button id="bHelp" title="Keyboard shortcuts">?</button>
+</header>
+
+<main id="viewport">
+  <div id="doc"><div id="overlay"></div></div>
+  <div id="empty">
+    <div class="card">
+      <h1>Present only what you're <b>talking about</b></h1>
+      <p>Drop a <strong>PDF</strong> or images here — or paste a screenshot with <strong>Ctrl&#8239;+&#8239;V</strong>.</p>
+      <button class="big" id="bOpen2">Open a file…</button>
+      <small>
+        PowerPoint / Keynote / Google Slides: use <em>File → Export / Download → PDF</em>, then open it here.<br>
+        Everything runs locally in this file — no internet needed, nothing is uploaded.
+      </small>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<dialog id="help">
+  <h2>Keyboard shortcuts</h2>
+  <table>
+    <tr><td>S</td><td>spawn a slate (hides an area)</td></tr>
+    <tr><td>C</td><td>spawn a curtain (hides everything below)</td></tr>
+    <tr><td>L</td><td>toggle spotlight (dims everything else)</td></tr>
+    <tr><td>Delete / ✕</td><td>kill the selected slate</td></tr>
+    <tr><td>X</td><td>kill all slates &amp; spotlight</td></tr>
+    <tr><td>Arrow keys</td><td>nudge selected slate / spotlight (Shift = big steps)</td></tr>
+    <tr><td>+ / − , Ctrl+wheel</td><td>zoom (re-rendered sharp at any level)</td></tr>
+    <tr><td>W</td><td>fit width &nbsp;·&nbsp; 0 = 100%</td></tr>
+    <tr><td>F</td><td>fullscreen &nbsp;·&nbsp; H = hide toolbar</td></tr>
+    <tr><td>O</td><td>open file &nbsp;·&nbsp; Ctrl+V paste screenshot</td></tr>
+    <tr><td>Esc</td><td>deselect / close</td></tr>
+  </table>
+  <p>Drag a slate to move it. Drag any edge or corner to widen or reshape it — a curtain is just a
+     slate stretched to full width. Slates stick to the document, so scrolling and zooming keep them
+     glued to the exact spot they cover.</p>
+</dialog>
+
+<script>
